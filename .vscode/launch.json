@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [{
+        "name": "Python",
+        "type": "python",
+        "request": "launch",
+        "python": "python",
+        "program": "${workspaceRoot}/src/posterum/main.py",
+        "env": {
+            "PYTHONPATH": "${workspaceRoot}/src:{env.PYTHONPATH}"
+        }
+    }, {
+        "name": "Python3",
+        "type": "python",
+        "request": "launch",
+        "python": "python3",
+        "program": "${workspaceRoot}/src/posterum/main.py",
+        "env": {
+            "PYTHONPATH": "${workspaceRoot}/src:{env.PYTHONPATH}"
+        }
+    }]
+}

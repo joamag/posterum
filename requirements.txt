@@ -1,0 +1,4 @@
+appier
+appier-extras
+jinja2
+pymongo
