@@ -1,2 +1,3 @@
-# posterum
-Simple e-mail address verification service
+# Posterum
+
+Simple e-mail address verification service.
