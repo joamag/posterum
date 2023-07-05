@@ -4,16 +4,11 @@
 import appier
 import appier_extras
 
-class PosterumApp(appier.WebApp):
 
+class PosterumApp(appier.WebApp):
     def __init__(self, *args, **kwargs):
         appier.WebApp.__init__(
-            self,
-            name = "posterum",
-            parts = (
-                appier_extras.AdminPart,
-            ),
-            *args, **kwargs
+            self, name="posterum", parts=(appier_extras.AdminPart,), *args, **kwargs
         )
 
     def _version(self):
@@ -24,6 +19,7 @@ class PosterumApp(appier.WebApp):
 
     def _observations(self):
         return "Simple e-mail address verification service"
+
 
 if __name__ == "__main__":
     app = PosterumApp()
