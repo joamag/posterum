@@ -13,5 +13,6 @@ class AddressController(RootController):
         key = self.field("key", mandatory=True)
 
         #@TODO make use of netius SMTP client to validate the address
+        # This is going to be a tricky operation to handle
 
         return dict(address=address, key=key)
