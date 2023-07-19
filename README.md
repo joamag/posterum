@@ -1,6 +1,6 @@
 # Posterum
 
-Simple e-mail address verification service.
+Simple e-mail address SMTP verification service.
 
 ## Features
 
@@ -18,3 +18,11 @@ Simple e-mail address verification service.
 3. Install dependencies (we use [pip-tools](https://github.com/jazzband/pip-tools) for dependency management)
 
 Make a request for email validation using `GET http://localhost:8080/v1/addresses/validate?key=123&email=joao@amplemarket.com`.
+
+## License
+
+Posterum is currently licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/).
+
+## Build Automation
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/)
