@@ -27,7 +27,7 @@ class PosterumApp(appier.WebApp):
         return "Posterum"
 
     def _observations(self):
-        return "Simple e-mail address verification service"
+        return "Simple e-mail address SMTP verification service"
 
 
 if __name__ == "__main__":
