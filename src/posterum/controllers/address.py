@@ -30,8 +30,7 @@ class AddressController(RootController):
 
         return dumps(dict(address=address, result=result))
 
-
-    async def get_mx_records(domain):
+    async def get_mx_records(self, domain):
         resolver = aiodns.DNSResolver()
         try:
             result = await resolver.query(domain, "MX")
@@ -39,8 +38,7 @@ class AddressController(RootController):
         except aiodns.error.DNSError:
             return []
 
-
-    async def is_valid_email(email) -> bool:
+    async def is_valid_email(self, email) -> bool:
         domain = email.split("@")[1]
         mx_servers = await self.get_mx_records(domain)
 

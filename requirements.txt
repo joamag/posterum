@@ -2,5 +2,7 @@ appier
 appier-extras
 jinja2
 pymongo
+netius
+uvicorn
 aiodns
 aiosmtplib
