@@ -1,4 +1,4 @@
-FROM python3:3.11-alpine
+FROM python:3.11-alpine
 
 LABEL version="1.0"
 LABEL maintainer="João Magalhães <joamag@gmail.com>"
