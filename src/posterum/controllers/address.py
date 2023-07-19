@@ -162,9 +162,10 @@ class AddressController(RootController):
                     True,
                 )
         except aiosmtplib.SMTPResponseException as _exception:
+            _status = "undeliverable" if _exception.code == 550 else "unknown"
             exception, status, message, code, result = (
                 _exception,
-                "unknown",
+                _status,
                 _exception.message,
                 _exception.code,
                 False,
