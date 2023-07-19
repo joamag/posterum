@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
+
 import appier
 import appier_extras
 
@@ -10,6 +12,13 @@ class PosterumApp(appier.WebApp):
         appier.WebApp.__init__(
             self, name="posterum", parts=(appier_extras.AdminPart,), *args, **kwargs
         )
+
+    def start(self):
+        appier.WebApp.start(self)
+        import asyncio
+
+        if os.name == "nt":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     def _version(self):
         return "0.1.0"
@@ -26,3 +35,5 @@ if __name__ == "__main__":
     app.serve()
 else:
     __path__ = []
+
+# @TODO

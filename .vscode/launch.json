@@ -1,22 +1,15 @@
 {
     "version": "0.2.0",
-    "configurations": [{
-        "name": "Python",
-        "type": "python",
-        "request": "launch",
-        "python": "python",
-        "program": "${workspaceRoot}/src/posterum/main.py",
-        "env": {
-            "PYTHONPATH": "${workspaceRoot}/src:{env.PYTHONPATH}"
+    "configurations": [
+        {
+            "name": "Python: Appier",
+            "type": "python",
+            "request": "launch",
+            "module": "posterum.main",
+            "env": {
+                "SERVER": "uvicorn",
+                "PYTHONPATH": "src"
+            }
         }
-    }, {
-        "name": "Python3",
-        "type": "python",
-        "request": "launch",
-        "python": "python3",
-        "program": "${workspaceRoot}/src/posterum/main.py",
-        "env": {
-            "PYTHONPATH": "${workspaceRoot}/src:{env.PYTHONPATH}"
-        }
-    }]
+    ]
 }
