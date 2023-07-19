@@ -82,6 +82,7 @@ class AddressController(RootController):
         # the sending of the response
         result = await self.is_valid_email(address)
 
+        self.content_type("application/json")
         return dumps(dict(address=address, **(result.to_dict() if result else {})))
 
     async def get_mx_records(self, domain):
