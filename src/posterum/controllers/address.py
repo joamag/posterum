@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+from typing import Literal
 import aiodns
 import aiosmtplib
 
@@ -13,9 +14,12 @@ from .root import RootController
 
 MX_CACHE = {}
 
+Status = Literal["deliverable", "undeliverable", "risky", "unknown", "unavailable"]
+
 
 class ValidationResult:
     result: bool = False
+    status: Status = "undeliverable"
     message: str | None = None
     code: int | None = None
     exception: Exception | None = None
@@ -26,7 +30,8 @@ class ValidationResult:
 
     def __init__(
         self,
-        result: bool,
+        result: bool = False,
+        status: Status = "undeliverable",
         message: str | None = None,
         code: int | None = None,
         exception: Exception | None = None,
@@ -36,6 +41,7 @@ class ValidationResult:
         total_time: float | None = None,
     ):
         self.result = result
+        self.status = status
         self.message = message
         self.code = code
         self.exception = exception
@@ -49,6 +55,7 @@ class ValidationResult:
     ) -> dict[str, str | int | bool | list[str] | dict[str, float | None] | None]:
         return dict(
             result=self.result,
+            status=self.status,
             message=self.message,
             code=self.code,
             exception=self.exception.__class__.__name__ if self.exception else None,
@@ -120,7 +127,11 @@ class AddressController(RootController):
         return result
 
     async def is_valid_mx(self, email: str, mx_server: str) -> ValidationResult:
-        result, exception, message, code = False, None, None, None
+        result: bool = False
+        status: Status = "undeliverable"
+        exception: Exception | None = None
+        message: str | None = None
+        code: int | None = None
 
         smtp_client = aiosmtplib.SMTP(hostname=mx_server)
         try:
@@ -130,8 +141,9 @@ class AddressController(RootController):
             try:
                 response = await smtp_client.vrfy(email)
                 if response[0] == 250:
-                    exception, message, code, result = (
+                    exception, status, message, code, result = (
                         None,
+                        "deliverable",
                         response[1],
                         response[0],
                         True,
@@ -142,13 +154,23 @@ class AddressController(RootController):
             await smtp_client.mail("noreply@bemisc.com")
             response = await smtp_client.rcpt(email)
             if response[0] == 250:
-                exception, message, code, result = None, response[1], response[0], True
+                exception, status, message, code, result = (
+                    None,
+                    "deliverable",
+                    response[1],
+                    response[0],
+                    True,
+                )
         except aiosmtplib.SMTPResponseException as _exception:
-            exception, message, code = _exception, _exception.message, _exception.code
-            result = False
+            exception, status, message, code, result = (
+                _exception,
+                "unknown",
+                _exception.message,
+                _exception.code,
+                False,
+            )
         except Exception as _exception:
-            exception = exception
-            result = False
+            exception, status, result = exception, "unknown", False
         finally:
             try:
                 await smtp_client.quit()
@@ -156,5 +178,10 @@ class AddressController(RootController):
                 pass
 
         return ValidationResult(
-            result, message=message, code=code, exception=exception, mx_server=mx_server
+            result=result,
+            status=status,
+            message=message,
+            code=code,
+            exception=exception,
+            mx_server=mx_server,
         )
