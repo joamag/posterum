@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import time
-from typing import Literal
 import aiodns
 import aiosmtplib
 
 import appier
 
 from json import dumps
+from typing import Literal
 
 from .root import RootController
 
