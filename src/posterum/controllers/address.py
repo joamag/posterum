@@ -110,7 +110,6 @@ class AddressController(RootController):
 
         # @TODO: need to determine if we should validate multiple servers
         if not mx_servers:
-            print(mx_servers)
             return None
 
         start_smtp = time.time()
@@ -127,17 +126,18 @@ class AddressController(RootController):
 
         return result
 
-    async def is_valid_mx(self, email: str, mx_server: str) -> ValidationResult:
+    async def is_valid_mx(self, email: str, mx_server: str, hostname: str | None = None) -> ValidationResult:
         result: bool = False
         status: Status = "undeliverable"
         exception: Exception | None = None
         message: str | None = None
         code: int | None = None
+        hostname = hostname or appier.conf("SMTP_HOST", "localhost")
 
         smtp_client = aiosmtplib.SMTP(hostname=mx_server)
         try:
             await smtp_client.connect()
-            response = await smtp_client.ehlo()
+            response = await smtp_client.ehlo(hostname=hostname)
 
             try:
                 response = await smtp_client.vrfy(email)
