@@ -11,6 +11,10 @@ from typing import Literal, cast
 
 MX_CACHE = {}
 
+RESULT_CACHE = {}  # @TODO must handle this in a much better way
+
+BLACKLISTED = set()  # @TODO this must be time bound and not permanent
+
 Status = Literal["deliverable", "undeliverable", "risky", "unknown", "unavailable"]
 
 
@@ -65,7 +69,7 @@ class SMTPVerifier:
     @classmethod
     async def validate_email(cls, email: str) -> ValidationResult | None:
         smtp_host = cast(str, appier.conf("SMTP_HOST", "localhost"))
-        smtp_timeout = cast(float, appier.conf("SMTP_TIMEOUT", 5.0, cast=float))
+        smtp_timeout = cast(float, appier.conf("SMTP_TIMEOUT", 10.0, cast=float))
 
         domain = email.split("@")[1]
 
@@ -102,7 +106,7 @@ class SMTPVerifier:
         mx_server: str,
         hostname: str | None = None,
         smtp_host: str = "localhost",
-        timeout: float = 5.0,
+        timeout: float = 10.0,
     ) -> ValidationResult:
         result: bool = False
         status: Status = "undeliverable"
@@ -110,9 +114,15 @@ class SMTPVerifier:
         message: str | None = None
         code: int | None = None
 
-        smtp_client = aiosmtplib.SMTP(
-            hostname=mx_server, start_tls=True, timeout=timeout
-        )
+        if mx_server in BLACKLISTED:
+            return ValidationResult(
+                result=True,
+                status="unknown",
+                message="MX server blacklisted (timeout?)",
+                mx_server=mx_server,
+            )
+
+        smtp_client = aiosmtplib.SMTP(hostname=mx_server, timeout=timeout)
         try:
             await smtp_client.connect(timeout=timeout)
             response = await smtp_client.ehlo(hostname=hostname)
@@ -150,6 +160,9 @@ class SMTPVerifier:
                 _exception.code,
                 False,
             )
+        except aiosmtplib.SMTPConnectTimeoutError as _exception:
+            BLACKLISTED.add(mx_server)
+            exception, status, result = _exception, "unknown", False
         except Exception as _exception:
             exception, status, result = _exception, "unknown", False
         finally:
