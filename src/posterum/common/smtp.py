@@ -7,7 +7,7 @@ import aiosmtplib
 import appier
 
 from time import time
-from typing import Literal
+from typing import Literal, cast
 
 MX_CACHE = {}
 
@@ -64,6 +64,9 @@ class ValidationResult:
 class SMTPVerifier:
     @classmethod
     async def validate_email(cls, email: str) -> ValidationResult | None:
+        smtp_host = cast(str, appier.conf("SMTP_HOST", "localhost"))
+        smtp_timeout = cast(float, appier.conf("SMTP_TIMEOUT", 5.0, cast=float))
+
         domain = email.split("@")[1]
 
         start_dns = time()
@@ -78,7 +81,9 @@ class SMTPVerifier:
 
         start_smtp = time()
         try:
-            result = await cls._validate_email_mx(email, mx_servers[0])
+            result = await cls._validate_email_mx(
+                email, mx_servers[0], smtp_host=smtp_host, timeout=smtp_timeout
+            )
         finally:
             smtp_time = time() - start_smtp
 
@@ -92,23 +97,28 @@ class SMTPVerifier:
 
     @classmethod
     async def _validate_email_mx(
-        cls, email: str, mx_server: str, hostname: str | None = None
+        cls,
+        email: str,
+        mx_server: str,
+        hostname: str | None = None,
+        smtp_host: str = "localhost",
+        timeout: float = 5.0,
     ) -> ValidationResult:
-        hostname = hostname or appier.conf("SMTP_HOST", "localhost")
-
         result: bool = False
         status: Status = "undeliverable"
         exception: Exception | None = None
         message: str | None = None
         code: int | None = None
 
-        smtp_client = aiosmtplib.SMTP(hostname=mx_server)
+        smtp_client = aiosmtplib.SMTP(
+            hostname=mx_server, start_tls=True, timeout=timeout
+        )
         try:
-            await smtp_client.connect()
+            await smtp_client.connect(timeout=timeout)
             response = await smtp_client.ehlo(hostname=hostname)
 
             try:
-                response = await smtp_client.vrfy(email)
+                response = await smtp_client.vrfy(email, timeout=timeout)
                 if response[0] == 250:
                     return ValidationResult(
                         result=True,
@@ -121,7 +131,7 @@ class SMTPVerifier:
                 pass
 
             await smtp_client.mail("noreply@bemisc.com")
-            response = await smtp_client.rcpt(email)
+            response = await smtp_client.rcpt(email, timeout=timeout)
             if response[0] == 250:
                 return ValidationResult(
                     result=True,
@@ -130,6 +140,7 @@ class SMTPVerifier:
                     code=response[0],
                     mx_server=mx_server,
                 )
+
         except aiosmtplib.SMTPResponseException as _exception:
             _status = "undeliverable" if _exception.code == 550 else "unknown"
             exception, status, message, code, result = (
@@ -140,10 +151,10 @@ class SMTPVerifier:
                 False,
             )
         except Exception as _exception:
-            exception, status, result = exception, "unknown", False
+            exception, status, result = _exception, "unknown", False
         finally:
             try:
-                await smtp_client.quit()
+                await smtp_client.quit(timeout=timeout)
             except Exception:
                 pass
 
