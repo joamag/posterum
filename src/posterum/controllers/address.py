@@ -6,7 +6,7 @@ import appier
 from json import dumps
 from typing import Literal
 
-from posterum import SMTPVerifier
+from posterum.common import SMTPVerifier
 
 from .root import RootController
 
