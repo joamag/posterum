@@ -2,6 +2,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: FastAPI",
+            "type": "python",
+            "request": "launch",
+            "module": "app",
+            "env": {
+                "PYTHONPATH": "src"
+            }
+        },
+        {
             "name": "Python: Appier",
             "type": "python",
             "request": "launch",
