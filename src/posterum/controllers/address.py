@@ -19,7 +19,7 @@ class AddressController(RootController):
         address = self.field("email")
         address = self.field("address", address)
         cache = self.field("cache", None, cast=bool)
-        key = self.field("key", mandatory=True)
+        key = self.field("key")
 
         if secret_key and not key == secret_key:
             raise appier.SecurityError(message="Invalid key")

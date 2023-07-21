@@ -19,6 +19,14 @@ Simple e-mail address SMTP verification service.
 
 Make a request for email validation using `GET http://localhost:8080/v1/addresses/validate?key=123&email=joao@amplemarket.com`.
 
+## Load testing
+
+You can use [K6](https://k6.io/) to load test the API. To do so, you need to install K6 and run the following command:
+
+```bash
+k6 run --vus 64 --iterations 5000 load/email-dummy.js
+```
+
 ## License
 
 Posterum is currently licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/).
