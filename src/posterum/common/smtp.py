@@ -79,6 +79,7 @@ class SMTPVerifier:
             if cache == None
             else cache
         )
+        cache_ttl = cast(float, appier.conf("CACHE_TTL", 3600, cast=float))
 
         domain = email.split("@")[1]
 
@@ -103,7 +104,7 @@ class SMTPVerifier:
                 result = await cls._validate_email_mx(
                     email, mx_server, hostname=smtp_host, timeout=smtp_timeout
                 )
-                RESULT_CACHE.set(key, result, ttl=3600)
+                RESULT_CACHE.set(key, result, ttl=cache_ttl)
         finally:
             smtp_time = time() - start_smtp
 
