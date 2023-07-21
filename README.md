@@ -24,7 +24,7 @@ Make a request for email validation using `GET http://localhost:8080/v1/addresse
 You can use [K6](https://k6.io/) to load test the API. To do so, you need to install K6 and run the following command:
 
 ```bash
-k6 run --vus 64 --iterations 5000 load/email-dummy.js
+k6 run --vus 64 --iterations 5000 load/email-local.js
 ```
 
 ## License
