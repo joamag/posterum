@@ -11,6 +11,9 @@ class TestCache(IsolatedAsyncioTestCase):
         self.cache.set("key", "value")
         self.assertEqual(self.cache.get("key"), "value")
 
+        self.cache.set("key", "value", ttl=-1.0)
+        self.assertEqual(self.cache.get("key"), None)
+
     def test_delete(self):
         self.cache.set("key", "value")
         self.cache.delete("key")
@@ -20,6 +23,9 @@ class TestCache(IsolatedAsyncioTestCase):
         self.cache.set("key", "value")
         self.assertTrue(self.cache.contains("key"))
         self.assertFalse(self.cache.contains("nonexistent_key"))
+
+        self.cache.set("key", "value", ttl=-1.0)
+        self.assertFalse(self.cache.contains("key"))
 
     def test_magic_methods(self):
         self.cache["key"] = "value"

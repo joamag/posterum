@@ -1,3 +1,4 @@
+from time import time
 from typing import Any
 
 
@@ -5,7 +6,7 @@ class Cache:
     def get(self, key: str):
         raise NotImplementedError()
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any, ttl: float | None = None):
         raise NotImplementedError()
 
     def delete(self, key: str):
@@ -30,16 +31,23 @@ class Cache:
 class MemoryCache(Cache):
     def __init__(self):
         super().__init__()
-        self._cache = {}
+        self._cache: dict[str, tuple[float, Any]] = {}
 
-    def get(self, key: str):
-        return self._cache.get(key)
+    def get(self, key: str, default=None):
+        value, timeout = self._cache.get(key, (default, None))
+        if not timeout is None and time() > timeout:
+            self.delete(key)
+            return default
+        return value
 
-    def set(self, key: str, value: Any):
-        self._cache[key] = value
+    def set(self, key: str, value: Any, ttl: float | None = None):
+        self._cache[key] = (value, (time() + ttl) if ttl else None)
 
     def delete(self, key: str):
         del self._cache[key]
 
     def contains(self, key: str):
-        return key in self._cache
+        if not key in self._cache:
+            return False
+        _, timeout = self._cache[key]
+        return timeout is None or time() <= timeout
