@@ -9,16 +9,22 @@ from fastapi.responses import JSONResponse
 from posterum import SMTPVerifier
 
 app = FastAPI(
-    title="Posterum",
+    title="posterum",
     version="0.1.0",
     description="Posterum SMTP validation service.",
 )
 
 
+@app.get("/")
+@app.get("/index")
+async def index():
+    return JSONResponse(dict(name="posterum", version="0.1.0", timestamp=time()))
+
+
 @app.get("/ping")
 @app.get("/api/v1/ping")
 async def ping():
-    return JSONResponse(content=dict(pong=True, timestamp=time()))
+    return JSONResponse(dict(pong=True, timestamp=time()))
 
 
 @app.get("/v1/addresses/validate")
@@ -44,9 +50,7 @@ async def address_validate(
     # the sending of the response
     result = await SMTPVerifier.validate_email(address, cache=cache)
 
-    return JSONResponse(
-        content=dict(address=address, **(result.to_dict() if result else {}))
-    )
+    return JSONResponse(dict(address=address, **(result.to_dict() if result else {})))
 
 
 if __name__ == "__main__":
