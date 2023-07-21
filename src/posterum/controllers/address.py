@@ -16,6 +16,7 @@ class AddressController(RootController):
     async def validate(self):
         address = self.field("email")
         address = self.field("address", address)
+        cache = self.field("cache", None, cast=bool)
         key = self.field("key", mandatory=True)
 
         if not key == "123":
@@ -27,7 +28,7 @@ class AddressController(RootController):
         # runs the effective SMTP validation test for the address
         # and obtains the result of the validation, to be used in
         # the sending of the response
-        result = await SMTPVerifier.validate_email(address)
+        result = await SMTPVerifier.validate_email(address, cache=cache)
 
         self.content_type("application/json")
         return dumps(dict(address=address, **(result.to_dict() if result else {})))

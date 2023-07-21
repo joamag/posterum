@@ -9,11 +9,13 @@ import appier
 from time import time
 from typing import Literal, cast
 
+from .cache import MemoryCache
+
 MX_CACHE = {}
 
-RESULT_CACHE = {}  # @TODO must handle this in a much better way
+RESULT_CACHE = MemoryCache()
 
-BLACKLISTED = set()  # @TODO this must be time bound and not permanent
+BLACKLISTED = MemoryCache()
 
 Status = Literal["deliverable", "undeliverable", "risky", "unknown", "unavailable"]
 
@@ -67,9 +69,16 @@ class ValidationResult:
 
 class SMTPVerifier:
     @classmethod
-    async def validate_email(cls, email: str) -> ValidationResult | None:
+    async def validate_email(
+        cls, email: str, cache: bool | None = None
+    ) -> ValidationResult | None:
         smtp_host = cast(str, appier.conf("SMTP_HOST", "localhost"))
         smtp_timeout = cast(float, appier.conf("SMTP_TIMEOUT", 10.0, cast=float))
+        cache = (
+            cast(bool, appier.conf("CACHE", True, cast=bool))
+            if cache == None
+            else cache
+        )
 
         domain = email.split("@")[1]
 
@@ -85,9 +94,16 @@ class SMTPVerifier:
 
         start_smtp = time()
         try:
-            result = await cls._validate_email_mx(
-                email, mx_servers[0], smtp_host=smtp_host, timeout=smtp_timeout
-            )
+            mx_server = mx_servers[0]
+            key = (email, mx_server, smtp_host)
+            # @TODO make this a decorator supported cache
+            if cache and key in RESULT_CACHE:
+                result = RESULT_CACHE[key]
+            else:
+                result = await cls._validate_email_mx(
+                    email, mx_server, hostname=smtp_host, timeout=smtp_timeout
+                )
+                RESULT_CACHE.set(key, result, ttl=3600)
         finally:
             smtp_time = time() - start_smtp
 
@@ -105,7 +121,6 @@ class SMTPVerifier:
         email: str,
         mx_server: str,
         hostname: str | None = None,
-        smtp_host: str = "localhost",
         timeout: float = 10.0,
     ) -> ValidationResult:
         result: bool = False
@@ -161,7 +176,8 @@ class SMTPVerifier:
                 False,
             )
         except aiosmtplib.SMTPConnectTimeoutError as _exception:
-            BLACKLISTED.add(mx_server)
+            # blacklists the MX server for 1 hour
+            BLACKLISTED.set(mx_server, True, ttl=3600)
             exception, status, result = _exception, "unknown", False
         except Exception as _exception:
             exception, status, result = _exception, "unknown", False
