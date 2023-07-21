@@ -4,7 +4,7 @@
 import appier
 
 from json import dumps
-from typing import Literal
+from typing import Literal, cast
 
 from posterum.common import SMTPVerifier
 
@@ -14,12 +14,14 @@ from .root import RootController
 class AddressController(RootController):
     @appier.route("/v1/addresses/validate", "GET", json=True)
     async def validate(self):
+        secret_key = cast(str | None, appier.conf("SECRET_KEY", None))
+
         address = self.field("email")
         address = self.field("address", address)
         cache = self.field("cache", None, cast=bool)
         key = self.field("key", mandatory=True)
 
-        if not key == "123":
+        if secret_key and not key == secret_key:
             raise appier.SecurityError(message="Invalid key")
 
         if not address:
