@@ -18,4 +18,4 @@ ADD src /src
 
 RUN pip3 install -r /requirements.txt && pip3 install -r /extra.txt && pip3 install --upgrade netius uvicorn
 
-CMD ["/usr/local/bin/python3", "/src/posterum/main.py"]
+CMD ["/usr/local/bin/python3", "/src/app.py"]
