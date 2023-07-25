@@ -26,6 +26,7 @@ class ValidationResult:
     message: str | None = None
     code: int | None = None
     exception: Exception | None = None
+    provider: str | None = None
     mx_server: str | None = None
     cached: bool = False
     cache_timestamp: float | None = None
@@ -41,6 +42,7 @@ class ValidationResult:
         message: str | None = None,
         code: int | None = None,
         exception: Exception | None = None,
+        provider: str | None = None,
         mx_server: str | None = None,
         cached: bool = False,
         cache_timestamp: float | None = None,
@@ -54,6 +56,7 @@ class ValidationResult:
         self.message = message
         self.code = code
         self.exception = exception
+        self.provider = provider
         self.mx_server = mx_server
         self.cached = cached
         self.cache_timestamp = cache_timestamp
@@ -73,6 +76,7 @@ class ValidationResult:
             message=self.message,
             code=self.code,
             exception=self.exception.__class__.__name__ if self.exception else None,
+            provider=self.provider,
             mx_server=self.mx_server,
             cached=self.cached,
             times=dict(dns=self.dns_time, smtp=self.smtp_time, total=self.total_time),
@@ -182,6 +186,7 @@ class SMTPVerifier:
                         status="deliverable",
                         message=response[1],
                         code=response[0],
+                        provider=await cls.guess_provider(mx_server, response[1]),
                         mx_server=mx_server,
                     )
             except aiosmtplib.SMTPResponseException:
@@ -195,9 +200,9 @@ class SMTPVerifier:
                     status="deliverable",
                     message=response[1],
                     code=response[0],
+                    provider=await cls.guess_provider(mx_server, response[1]),
                     mx_server=mx_server,
                 )
-
         except aiosmtplib.SMTPResponseException as _exception:
             _status = "undeliverable" if _exception.code == 550 else "unknown"
             exception, status, message, code, result = (
@@ -227,6 +232,24 @@ class SMTPVerifier:
             exception=exception,
             mx_server=mx_server,
         )
+
+    @classmethod
+    async def guess_provider(
+        cls, mx_server: str | None = None, message: str | None = None
+    ) -> str:
+        if mx_server:
+            if mx_server.endswith(".google.com"):
+                return "google"
+            if mx_server.endswith(".outlook.com"):
+                return "microsoft"
+        if message:
+            if "gsmtp" in message:
+                return "google"
+            if "outlook" in message:
+                return "microsoft"
+            if "yahoo" in message:
+                return "yahoo"
+        return "unknown"
 
     @classmethod
     async def _mx_records(cls, domain: str) -> list[str]:
