@@ -288,7 +288,7 @@ class SMTPVerifier:
             await smtp_client.ehlo(hostname=hostname)
             await smtp_client.mail(sender_email)
             code, _ = await smtp_client.rcpt(
-                f"{test_prefix]}4@{domain}", timeout=timeout
+                f"{test_prefix}4@{domain}", timeout=timeout
             )
             return code == 250
         except Exception:
