@@ -107,6 +107,7 @@ class SMTPVerifier:
     async def validate_email(
         cls, email: str, cache: bool | None = None
     ) -> ValidationResult | None:
+        smtp_sender = cast(str, appier.conf("SMTP_SENDER", "noreply@bemisc.com"))
         smtp_host = cast(str, appier.conf("SMTP_HOST", "localhost"))
         smtp_timeout = cast(float, appier.conf("SMTP_TIMEOUT", 10.0, cast=float))
         cache = (
@@ -143,7 +144,11 @@ class SMTPVerifier:
                 )
             else:
                 result = await cls._validate_email_mx(
-                    email, mx_server, hostname=smtp_host, timeout=smtp_timeout
+                    email,
+                    mx_server,
+                    sender_email=smtp_sender,
+                    hostname=smtp_host,
+                    timeout=smtp_timeout,
                 )
                 RESULT_CACHE.set(key, result, ttl=cache_ttl)
         finally:
@@ -287,9 +292,7 @@ class SMTPVerifier:
             await smtp_client.connect(timeout=timeout)
             await smtp_client.ehlo(hostname=hostname)
             await smtp_client.mail(sender_email)
-            code, _ = await smtp_client.rcpt(
-                f"{test_prefix}@{domain}", timeout=timeout
-            )
+            code, _ = await smtp_client.rcpt(f"{test_prefix}@{domain}", timeout=timeout)
             return code == 250
         except Exception:
             return False
