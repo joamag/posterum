@@ -115,7 +115,7 @@ class SMTPVerifier:
             if cache == None
             else cache
         )
-        cache_ttl = cast(float, appier.conf("CACHE_TTL", 3600, cast=float))
+        cache_ttl = cast(float, appier.conf("CACHE_TTL", 3600.0, cast=float))
 
         domain = email.split("@")[1]
 
@@ -283,8 +283,10 @@ class SMTPVerifier:
         sender_email: str = "noreply@bemisc.com",
         hostname: str | None = None,
         timeout: float = 10.0,
+        cache_ttl: float = 3600.0,
     ) -> bool:
-        if (mx_server, domain) in CATCH_ALL_CACHE:
+        cache_key = (mx_server, domain)
+        if cache_key in CATCH_ALL_CACHE:
             return CATCH_ALL_CACHE[(mx_server, domain)]
 
         smtp_client = aiosmtplib.SMTP(hostname=mx_server, timeout=timeout)
@@ -293,8 +295,11 @@ class SMTPVerifier:
             await smtp_client.ehlo(hostname=hostname)
             await smtp_client.mail(sender_email)
             code, _ = await smtp_client.rcpt(f"{test_prefix}@{domain}", timeout=timeout)
-            return code == 250
+            result = code == 250
+            CATCH_ALL_CACHE.set(cache_key, result, ttl=cache_ttl)
+            return result
         except Exception:
+            CATCH_ALL_CACHE.set(cache_key, False, ttl=cache_ttl)
             return False
         finally:
             try:
