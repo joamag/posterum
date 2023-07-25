@@ -7,7 +7,8 @@
             "request": "launch",
             "module": "app",
             "env": {
-                "PYTHONPATH": "src"
+                "PYTHONPATH": "src",
+                "PORT": "9090"
             }
         },
         {
@@ -16,8 +17,9 @@
             "request": "launch",
             "module": "posterum.main",
             "env": {
+                "PYTHONPATH": "src",
                 "SERVER": "uvicorn",
-                "PYTHONPATH": "src"
+                "PORT": "9090"
             }
         }
     ]

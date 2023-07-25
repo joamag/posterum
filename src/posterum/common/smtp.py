@@ -27,6 +27,9 @@ class ValidationResult:
     code: int | None = None
     exception: Exception | None = None
     mx_server: str | None = None
+    cached: bool = False
+    cache_timestamp: float | None = None
+    cache_timeout: float | None = None
     dns_time: float | None = None
     smtp_time: float | None = None
     total_time: float | None = None
@@ -39,6 +42,9 @@ class ValidationResult:
         code: int | None = None,
         exception: Exception | None = None,
         mx_server: str | None = None,
+        cached: bool = False,
+        cache_timestamp: float | None = None,
+        cache_timeout: float | None = None,
         dns_time: float | None = None,
         smtp_time: float | None = None,
         total_time: float | None = None,
@@ -49,22 +55,41 @@ class ValidationResult:
         self.code = code
         self.exception = exception
         self.mx_server = mx_server
+        self.cached = cached
+        self.cache_timestamp = cache_timestamp
+        self.cache_timeout = cache_timeout
         self.dns_time = dns_time
         self.smtp_time = smtp_time
         self.total_time = total_time
 
     def to_dict(
         self,
-    ) -> dict[str, str | int | bool | list[str] | dict[str, float | None] | None]:
-        return dict(
+    ) -> dict[
+        str, str | int | float | bool | list[str] | dict[str, float | None] | None
+    ]:
+        result = dict(
             result=self.result,
             status=self.status,
             message=self.message,
             code=self.code,
             exception=self.exception.__class__.__name__ if self.exception else None,
             mx_server=self.mx_server,
+            cached=self.cached,
             times=dict(dns=self.dns_time, smtp=self.smtp_time, total=self.total_time),
         )
+        if self.cached:
+            cache_ttl = (
+                (self.cache_timeout - self.cache_timestamp)
+                if self.cache_timeout and self.cache_timestamp
+                else None
+            )
+            result["cache"] = dict(
+                timestamp=self.cache_timestamp,
+                timeout=self.cache_timeout,
+                ttl=cache_ttl,
+                age=time() - self.cache_timestamp if self.cache_timestamp else None,
+            )
+        return result
 
 
 class SMTPVerifier:
@@ -99,7 +124,13 @@ class SMTPVerifier:
             key = (email, mx_server, smtp_host)
             # @TODO make this a decorator supported cache
             if cache and key in RESULT_CACHE:
-                result = RESULT_CACHE[key]
+                cache_item = RESULT_CACHE.get_item(key)
+                result = cache_item.value
+                result.cached, result.cache_timestamp, result.cache_timeout = (
+                    True,
+                    cache_item.timestamp,
+                    cache_item.timeout,
+                )
             else:
                 result = await cls._validate_email_mx(
                     email, mx_server, hostname=smtp_host, timeout=smtp_timeout

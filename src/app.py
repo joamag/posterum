@@ -54,7 +54,6 @@ async def address_validate(
 
 
 if __name__ == "__main__":
-
     uvicorn.run(
         "app:app",
         host=environ.get("HOST", "0.0.0.0"),
