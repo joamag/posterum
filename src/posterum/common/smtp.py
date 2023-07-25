@@ -159,12 +159,6 @@ class SMTPVerifier:
         hostname: str | None = None,
         timeout: float = 10.0,
     ) -> ValidationResult:
-        result: bool = False
-        status: Status = "undeliverable"
-        exception: Exception | None = None
-        message: str | None = None
-        code: int | None = None
-
         if mx_server in BLACKLISTED:
             return ValidationResult(
                 result=True,
@@ -179,59 +173,80 @@ class SMTPVerifier:
             response = await smtp_client.ehlo(hostname=hostname)
 
             try:
-                response = await smtp_client.vrfy(email, timeout=timeout)
-                if response[0] == 250:
+                code, message = await smtp_client.vrfy(email, timeout=timeout)
+                if code == 250:
                     return ValidationResult(
                         result=True,
                         status="deliverable",
-                        message=response[1],
-                        code=response[0],
-                        provider=await cls.guess_provider(mx_server, response[1]),
+                        message=message,
+                        code=code,
+                        provider=await cls.guess_provider(
+                            mx_server=mx_server, message=message
+                        ),
                         mx_server=mx_server,
                     )
             except aiosmtplib.SMTPResponseException:
                 pass
 
             await smtp_client.mail("noreply@bemisc.com")
-            response = await smtp_client.rcpt(email, timeout=timeout)
-            if response[0] == 250:
+            code, message = await smtp_client.rcpt(email, timeout=timeout)
+            if code == 250:
                 return ValidationResult(
                     result=True,
                     status="deliverable",
-                    message=response[1],
-                    code=response[0],
-                    provider=await cls.guess_provider(mx_server, response[1]),
+                    message=message,
+                    code=code,
+                    provider=await cls.guess_provider(
+                        mx_server=mx_server, message=message
+                    ),
                     mx_server=mx_server,
                 )
+
+            return ValidationResult(
+                result=False,
+                status="undeliverable",
+                message=message,
+                code=code,
+                provider=await cls.guess_provider(mx_server=mx_server, message=message),
+                mx_server=mx_server,
+            )
         except aiosmtplib.SMTPResponseException as _exception:
-            _status = "undeliverable" if _exception.code == 550 else "unknown"
-            exception, status, message, code, result = (
-                _exception,
-                _status,
-                _exception.message,
-                _exception.code,
-                False,
+            return ValidationResult(
+                result=False,
+                status="undeliverable" if _exception.code == 550 else "unknown",
+                message=_exception.message,
+                code=_exception.code,
+                exception=_exception,
+                provider=await cls.guess_provider(
+                    mx_server=mx_server, message=_exception.message
+                ),
+                mx_server=mx_server,
             )
         except aiosmtplib.SMTPConnectTimeoutError as _exception:
             # blacklists the MX server for 1 hour
             BLACKLISTED.set(mx_server, True, ttl=3600)
-            exception, status, result = _exception, "unknown", False
+            return ValidationResult(
+                result=False,
+                status="unknown",
+                message="MX server blacklisted (timeout?)",
+                exception=_exception,
+                provider=await cls.guess_provider(mx_server=mx_server),
+                mx_server=mx_server,
+            )
         except Exception as _exception:
-            exception, status, result = _exception, "unknown", False
+            return ValidationResult(
+                result=False,
+                status="unknown",
+                message=str(_exception),
+                exception=_exception,
+                provider=await cls.guess_provider(mx_server=mx_server),
+                mx_server=mx_server,
+            )
         finally:
             try:
                 await smtp_client.quit(timeout=timeout)
             except Exception:
                 pass
-
-        return ValidationResult(
-            result=result,
-            status=status,
-            message=message,
-            code=code,
-            exception=exception,
-            mx_server=mx_server,
-        )
 
     @classmethod
     async def guess_provider(
