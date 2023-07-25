@@ -15,6 +15,8 @@ MX_CACHE = {}
 
 RESULT_CACHE = MemoryCache()
 
+CATCH_ALL_CACHE = MemoryCache()
+
 BLACKLISTED = MemoryCache()
 
 Status = Literal["deliverable", "undeliverable", "risky", "unknown", "unavailable"]
@@ -28,6 +30,7 @@ class ValidationResult:
     exception: Exception | None = None
     provider: str | None = None
     mx_server: str | None = None
+    catch_all: bool | None = None
     cached: bool = False
     cache_timestamp: float | None = None
     cache_timeout: float | None = None
@@ -44,6 +47,7 @@ class ValidationResult:
         exception: Exception | None = None,
         provider: str | None = None,
         mx_server: str | None = None,
+        catch_all: bool | None = None,
         cached: bool = False,
         cache_timestamp: float | None = None,
         cache_timeout: float | None = None,
@@ -58,6 +62,7 @@ class ValidationResult:
         self.exception = exception
         self.provider = provider
         self.mx_server = mx_server
+        self.catch_all = catch_all
         self.cached = cached
         self.cache_timestamp = cache_timestamp
         self.cache_timeout = cache_timeout
@@ -78,6 +83,7 @@ class ValidationResult:
             exception=self.exception.__class__.__name__ if self.exception else None,
             provider=self.provider,
             mx_server=self.mx_server,
+            catch_all=self.catch_all,
             cached=self.cached,
             times=dict(dns=self.dns_time, smtp=self.smtp_time, total=self.total_time),
         )
@@ -156,6 +162,7 @@ class SMTPVerifier:
         cls,
         email: str,
         mx_server: str,
+        sender_email: str = "noreply@bemisc.com",
         hostname: str | None = None,
         timeout: float = 10.0,
     ) -> ValidationResult:
@@ -170,7 +177,7 @@ class SMTPVerifier:
         smtp_client = aiosmtplib.SMTP(hostname=mx_server, timeout=timeout)
         try:
             await smtp_client.connect(timeout=timeout)
-            response = await smtp_client.ehlo(hostname=hostname)
+            await smtp_client.ehlo(hostname=hostname)
 
             try:
                 code, message = await smtp_client.vrfy(email, timeout=timeout)
@@ -184,11 +191,18 @@ class SMTPVerifier:
                             mx_server=mx_server, message=message
                         ),
                         mx_server=mx_server,
+                        catch_all=await cls.is_catch_all(
+                            mx_server,
+                            domain=email.split("@")[1],
+                            sender_email=sender_email,
+                            hostname=hostname,
+                            timeout=timeout,
+                        ),
                     )
             except aiosmtplib.SMTPResponseException:
                 pass
 
-            await smtp_client.mail("noreply@bemisc.com")
+            await smtp_client.mail(sender_email)
             code, message = await smtp_client.rcpt(email, timeout=timeout)
             if code == 250:
                 return ValidationResult(
@@ -200,6 +214,13 @@ class SMTPVerifier:
                         mx_server=mx_server, message=message
                     ),
                     mx_server=mx_server,
+                    catch_all=await cls.is_catch_all(
+                        mx_server,
+                        domain=email.split("@")[1],
+                        sender_email=sender_email,
+                        hostname=hostname,
+                        timeout=timeout,
+                    ),
                 )
 
             return ValidationResult(
@@ -242,6 +263,36 @@ class SMTPVerifier:
                 provider=await cls.guess_provider(mx_server=mx_server),
                 mx_server=mx_server,
             )
+        finally:
+            try:
+                await smtp_client.quit(timeout=timeout)
+            except Exception:
+                pass
+
+    @classmethod
+    async def is_catch_all(
+        cls,
+        mx_server: str,
+        domain: str,
+        test_prefix: str = "averylargemail1234",
+        sender_email: str = "noreply@bemisc.com",
+        hostname: str | None = None,
+        timeout: float = 10.0,
+    ) -> bool:
+        if (mx_server, domain) in CATCH_ALL_CACHE:
+            return CATCH_ALL_CACHE[(mx_server, domain)]
+
+        smtp_client = aiosmtplib.SMTP(hostname=mx_server, timeout=timeout)
+        try:
+            await smtp_client.connect(timeout=timeout)
+            await smtp_client.ehlo(hostname=hostname)
+            await smtp_client.mail(sender_email)
+            code, _ = await smtp_client.rcpt(
+                f"{test_prefix]}4@{domain}", timeout=timeout
+            )
+            return code == 250
+        except Exception:
+            return False
         finally:
             try:
                 await smtp_client.quit(timeout=timeout)
