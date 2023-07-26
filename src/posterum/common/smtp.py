@@ -75,7 +75,7 @@ class ValidationResult:
     ) -> dict[
         str, str | int | float | bool | list[str] | dict[str, float | None] | None
     ]:
-        result = dict(
+        data = dict(
             result=self.result,
             status=self.status,
             message=self.message,
@@ -93,13 +93,13 @@ class ValidationResult:
                 if self.cache_timeout and self.cache_timestamp
                 else None
             )
-            result["cache"] = dict(
+            data["cache"] = dict(
                 timestamp=self.cache_timestamp,
                 timeout=self.cache_timeout,
                 ttl=cache_ttl,
                 age=time() - self.cache_timestamp if self.cache_timestamp else None,
             )
-        return result
+        return data
 
 
 class SMTPVerifier:
