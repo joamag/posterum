@@ -2,11 +2,12 @@ import uvicorn
 
 from os import environ
 from time import time
+from typing import Any, cast
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from posterum import SMTPVerifier
+from posterum import SMTPVerifier, PosterumError
 
 app = FastAPI(
     title="posterum",
@@ -51,6 +52,22 @@ async def address_validate(
     result = await SMTPVerifier.validate_email(address, cache=cache)
 
     return JSONResponse(dict(address=address, **(result.to_dict() if result else {})))
+
+
+@app.exception_handler(Exception)
+async def unicorn_exception_handler(request: Request, exc: Exception):
+    code = 500
+    payload = None
+    if isinstance(exc, PosterumError):
+        exc = cast(PosterumError, exc)
+        code = exc.code
+        payload = exc.payload
+    content: dict[str, Any] = dict(
+        message=str(exc), name=exc.__class__.__name__, code=code
+    )
+    if payload:
+        content["payload"] = payload
+    return JSONResponse(status_code=code, content=content)
 
 
 if __name__ == "__main__":
