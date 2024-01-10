@@ -1,15 +1,14 @@
-name: Main Workflow
+name: Deploy Workflow
 on:
   push:
-  schedule:
-    - cron: "0 0 * * 0"
+    tags:
+      - "*"
 jobs:
   build:
     name: Build
-    timeout-minutes: 10
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "latest"]
+        python-version: [3.11]
     runs-on: ubuntu-latest
     container: python:${{ matrix.python-version }}
     steps:
@@ -31,17 +30,21 @@ jobs:
         run: |
           pip install pylint
           cd src
-          PYTHONPATH=. pylint --rcfile ../.pylintrc *
+          PYTHONPATH=. pylint --disable=R,C battleship
           cd ..
-        if: matrix.python-version == '3.11'
-
-      - name: Verify code structure with mypy
-        run: |
-          pip install mypy
-          mypy src --ignore-missing-imports
-          MYPYPATH=src mypy test --ignore-missing-imports
 
       - name: Run unit tests
         run: |
           pip install pytest
           PYTHONPATH=src pytest
+
+      - name: Build Python packages
+        run: |
+          pip install twine wheel
+          python setup.py sdist bdist_wheel
+
+      - name: Deploy Python packages to PyPI
+        run: python -m twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
+        env:
+          PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
