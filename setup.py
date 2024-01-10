@@ -11,11 +11,7 @@ setuptools.setup(
     keywords="post smtp validation",
     url="https://posterum.bemisc.com",
     zip_safe=False,
-    packages=[
-        "posterum",
-        "posterum.controllers",
-        "posterum.common"
-    ],
+    packages=["posterum", "posterum.controllers", "posterum.common"],
     test_suite="posterum.test",
     package_dir={"": os.path.normpath("src")},
     install_requires=["appier", "appier-extras", "jinja2", "fastapi"],
