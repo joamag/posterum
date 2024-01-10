@@ -34,4 +34,4 @@ if __name__ == "__main__":
     app = PosterumApp()
     app.serve()
 else:
-    __path__ = []
+    __path__: list[str] = []

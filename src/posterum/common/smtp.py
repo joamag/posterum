@@ -11,7 +11,7 @@ from typing import Literal, cast
 
 from .cache import MemoryCache
 
-MX_CACHE = {}
+MX_CACHE: dict[str, list[str]] = {}
 
 RESULT_CACHE = MemoryCache()
 
@@ -72,9 +72,7 @@ class ValidationResult:
 
     def to_dict(
         self,
-    ) -> dict[
-        str, str | int | float | bool | list[str] | dict[str, float | None] | None
-    ]:
+    ) -> dict[str, bool | str | int | dict[str, float | None] | None]:
         data = dict(
             result=self.result,
             status=self.status,
