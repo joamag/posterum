@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name="posterum",
-    version="0.8.5",
+    version="0.1.0",
     author="João Magalhães",
     author_email="joamag@gmail.com",
     description="Simple e-mail address SMTP verification service",
