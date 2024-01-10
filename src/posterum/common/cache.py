@@ -1,5 +1,5 @@
 from time import time
-from typing import Any, NamedTuple, Self
+from typing import Any, NamedTuple
 
 Key = Any
 Value = Any
