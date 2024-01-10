@@ -33,7 +33,7 @@ jobs:
           cd src
           PYTHONPATH=. pylint --rcfile ../.pylintrc *
           cd ..
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.12'
 
       - name: Verify code structure with mypy
         run: |

@@ -25,13 +25,15 @@ jobs:
         run: |
           pip install black
           black . --check
+        if: matrix.python-version == '3.12'
 
       - name: Verify code linting with pylint
         run: |
           pip install pylint
           cd src
-          PYTHONPATH=. pylint --disable=R,C battleship
+          PYTHONPATH=. pylint --rcfile ../.pylintrc *
           cd ..
+        if: matrix.python-version == '3.12'
 
       - name: Run unit tests
         run: |
