@@ -35,5 +35,3 @@ if __name__ == "__main__":
     app.serve()
 else:
     __path__ = []
-
-# @TODO
