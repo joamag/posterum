@@ -1,5 +1,5 @@
 from time import time
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Self
 
 Key = Any
 Value = Any
@@ -41,7 +41,7 @@ class Cache:
 
 
 class MemoryCache(Cache):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._cache: dict[str, CacheItem] = {}
 
