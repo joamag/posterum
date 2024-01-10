@@ -1,0 +1,47 @@
+name: Main Workflow
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * 0"
+jobs:
+  build:
+    name: Build
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "latest"]
+    runs-on: ubuntu-latest
+    container: python:${{ matrix.python-version }}
+    steps:
+      - name: Checkout code from repository
+        uses: actions/checkout@v3
+
+      - name: Print Python information
+        run: python --version
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify code format with black
+        run: |
+          pip install black
+          black . --check
+
+      - name: Verify code linting with pylint
+        run: |
+          pip install pylint
+          cd src
+          PYTHONPATH=. pylint --rcfile ../.pylintrc *
+          cd ..
+        if: matrix.python-version == '3.11'
+
+      - name: Verify code structure with mypy
+        run: |
+          pip install mypy
+          mypy src --ignore-missing-imports
+          MYPYPATH=src mypy test --ignore-missing-imports
+
+      - name: Run unit tests
+        run: |
+          pip install pytest
+          PYTHONPATH=src pytest
