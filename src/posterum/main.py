@@ -13,8 +13,8 @@ class PosterumApp(appier.WebApp):
             self, name="posterum", parts=(appier_extras.AdminPart,), *args, **kwargs
         )
 
-    def start(self):
-        appier.WebApp.start(self)
+    def start(self, refresh=True):
+        appier.WebApp.start(self, refresh=refresh)
         import asyncio
 
         if os.name == "nt":
