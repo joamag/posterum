@@ -16,7 +16,7 @@ setuptools.setup(
     package_dir={"": os.path.normpath("src")},
     install_requires=["appier", "appier-extras", "jinja2", "fastapi"],
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
