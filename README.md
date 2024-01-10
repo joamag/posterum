@@ -1,4 +1,4 @@
-# Posterum 📫
+# [Posterum 📫](https://posterum.bemisc.com)
 
 Simple e-mail address SMTP verification service.
 
