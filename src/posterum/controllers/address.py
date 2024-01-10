@@ -4,7 +4,7 @@
 import appier
 
 from json import dumps
-from typing import Literal, cast
+from typing import cast
 
 from posterum.common import SMTPVerifier
 
