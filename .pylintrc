@@ -1,0 +1,2 @@
+[main]
+disable=R,C,W0613,E1135,E1136
