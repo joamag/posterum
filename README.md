@@ -33,4 +33,6 @@ Posterum is currently licensed under the [Apache License, Version 2.0](http://ww
 
 ## Build Automation
 
+[![Build Status](https://github.com/joamag/posterum/workflows/Main%20Workflow/badge.svg)](https://github.com/joamag/posterum/actions)
+[![PyPi Status](https://img.shields.io/pypi/v/posterum.svg)](https://pypi.python.org/pypi/posterum)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/)
