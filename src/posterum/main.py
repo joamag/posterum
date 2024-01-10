@@ -21,7 +21,7 @@ class PosterumApp(appier.WebApp):
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     def _version(self):
-        return "0.1.0"
+        return "0.1.1"
 
     def _description(self):
         return "Posterum"

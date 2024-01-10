@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 *
 
+## [0.1.1] - 2024-01-10
+
+### Fixed
+
+* CI/CD pipeline files
+
 ## [0.1.0] - 2024-01-10
 
 ### Added
