@@ -8,7 +8,7 @@ setuptools.setup(
     author_email="joamag@gmail.com",
     description="Simple e-mail address SMTP verification service",
     license="Apache License, Version 2.0",
-    keywords="post smtp validation",
+    keywords="posterum smtp validation",
     url="https://posterum.bemisc.com",
     zip_safe=False,
     packages=["posterum", "posterum.controllers", "posterum.common"],
