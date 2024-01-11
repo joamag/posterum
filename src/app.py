@@ -11,11 +11,12 @@ from posterum import SMTPVerifier, PosterumError
 
 NAME = "posterum"
 VERSION = "0.1.1"
+DESCRIPTION = "Simple e-mail address SMTP verification service"
 
 app = FastAPI(
     title=NAME,
     version=VERSION,
-    description="Posterum SMTP validation service.",
+    description=DESCRIPTION,
 )
 
 
