@@ -1,10 +1,10 @@
-import aiodns
-import aiosmtplib
-
 import appier
 
 from time import time
 from typing import Literal, cast
+from aiodns import DNSResolver
+from aiosmtplib import SMTP, SMTPConnectTimeoutError, SMTPResponseException
+from aiodns.error import DNSError
 
 from .cache import MemoryCache
 
@@ -174,7 +174,7 @@ class SMTPVerifier:
                 mx_server=mx_server,
             )
 
-        smtp_client = aiosmtplib.SMTP(hostname=mx_server, timeout=timeout)
+        smtp_client = SMTP(hostname=mx_server, timeout=timeout)
         try:
             await smtp_client.connect(timeout=timeout)
             await smtp_client.ehlo(hostname=hostname)
@@ -199,7 +199,7 @@ class SMTPVerifier:
                             timeout=timeout,
                         ),
                     )
-            except aiosmtplib.SMTPResponseException:
+            except SMTPResponseException:
                 pass
 
             await smtp_client.mail(sender_email)
@@ -231,7 +231,7 @@ class SMTPVerifier:
                 provider=await cls.guess_provider(mx_server=mx_server, message=message),
                 mx_server=mx_server,
             )
-        except aiosmtplib.SMTPResponseException as _exception:
+        except SMTPResponseException as _exception:
             return ValidationResult(
                 result=False,
                 status="undeliverable" if _exception.code == 550 else "unknown",
@@ -243,7 +243,7 @@ class SMTPVerifier:
                 ),
                 mx_server=mx_server,
             )
-        except aiosmtplib.SMTPConnectTimeoutError as _exception:
+        except SMTPConnectTimeoutError as _exception:
             # blacklists the MX server for 1 hour
             BLACKLISTED.set(mx_server, True, ttl=3600)
             return ValidationResult(
@@ -284,7 +284,7 @@ class SMTPVerifier:
         if cache_key in CATCH_ALL_CACHE:
             return CATCH_ALL_CACHE[(mx_server, domain)]
 
-        smtp_client = aiosmtplib.SMTP(hostname=mx_server, timeout=timeout)
+        smtp_client = SMTP(hostname=mx_server, timeout=timeout)
         try:
             await smtp_client.connect(timeout=timeout)
             await smtp_client.ehlo(hostname=hostname)
@@ -334,12 +334,12 @@ class SMTPVerifier:
         if domain in MX_CACHE:
             return MX_CACHE[domain]
 
-        resolver = aiodns.DNSResolver()
+        resolver = DNSResolver()
         try:
             result = await resolver.query(domain, "MX")
             mx_records = [str(mx.host) for mx in result]
             MX_CACHE[domain] = mx_records
-        except aiodns.error.DNSError:
+        except DNSError:
             mx_records = []
 
         return mx_records
