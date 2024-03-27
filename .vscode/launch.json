@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Python: FastAPI",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "app",
             "env": {
@@ -13,7 +13,7 @@
         },
         {
             "name": "Python: Appier",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "posterum.main",
             "env": {
