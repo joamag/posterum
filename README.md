@@ -1,6 +1,8 @@
 # [Posterum 📫](https://posterum.bemisc.com)
 
-Simple e-mail address SMTP verification service.
+Simple (yet powerful) e-mail address verification service.
+
+**Build for educational purposed but ready for production.**
 
 ## Features
 
