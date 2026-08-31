@@ -79,5 +79,5 @@ if __name__ == "__main__":
         "app:app",
         host=environ.get("HOST", "0.0.0.0"),
         port=int(environ.get("PORT", "8080")),
-        reload=True,
+        reload=environ.get("RELOAD", "0").lower() in ("1", "true"),
     )

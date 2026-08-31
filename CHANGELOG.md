@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Added new `AGENTS.md` file for AI automation
+* Added automated Docker image build and deployment
 
 ### Changed
 
@@ -17,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-*
+* Fixed high CPU usage caused by the auto-reload watcher running in production
 
 ## [0.1.1] - 2024-01-10
 
