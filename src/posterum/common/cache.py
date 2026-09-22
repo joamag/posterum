@@ -47,7 +47,7 @@ class MemoryCache(Cache):
 
     def get(self, key: Key, default: Any | None = None) -> Any:
         value, _, timeout = self._cache.get(key, (default, None, None))
-        if not timeout is None and time() > timeout:
+        if not timeout == None and time() > timeout:
             self.delete(key)
             return default
         return value
@@ -55,7 +55,7 @@ class MemoryCache(Cache):
     def get_item(self, key: Key) -> CacheItem:
         item = self._cache[key]
         _, _, timeout = item
-        if not timeout is None and time() > timeout:
+        if not timeout == None and time() > timeout:
             self.delete(key)
             raise KeyError(key)
         return item
@@ -64,7 +64,7 @@ class MemoryCache(Cache):
         timestamp = time()
         self._cache[key] = (
             CacheItem(value, timestamp, timestamp + ttl)
-            if ttl
+            if not ttl == None
             else CacheItem(value, timestamp, None)
         )
 
@@ -75,7 +75,7 @@ class MemoryCache(Cache):
         if not key in self._cache:
             return False
         _, _, timeout = self._cache[key]
-        return timeout is None or time() <= timeout
+        return timeout == None or time() <= timeout
 
     def timestamp(self, key: Key) -> float:
         _, timestamp, _ = self._cache[key]
